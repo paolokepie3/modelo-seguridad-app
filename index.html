@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo de Seguridad - Framework .NET</title>
+ 
+    <style>
+        /* ===== ESTILOS GENERALES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7f9;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+        
+        /* ===== CAPAS Y CONTROLES ===== */
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .layer {
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .layer:hover {
+            transform: translateY(-5px);
+        }
+        
+        .layer-title {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .control {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .control:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #ffeb3b;
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .control-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .control-desc {
+            font-size: 0.9em;
+            color: #34495e;
+        }
+        
+        .presentation {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+        }
+        .presentation .control-title,
+        .presentation .control-desc {
+            /* color: white; */
+        }
+        
+        .core {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+        }
+        .core .control-title,
+        .core .control-desc {
+            /* color: white; */
+        }
+        
+        .infrastructure {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        .infrastructure .control-title,
+        .infrastructure .control-desc {
+            /* color: white; */
+        }
+        
+        .testing {
+            background: linear-gradient(to right, #f39c12, #d35400);
+            color: white;
+        }
+        .testing .control-title,
+        .testing .control-desc {
+            /* color: white; */
+        }
+        
+        /* ===== MATRIZ OWASP ===== */
+        .owasp-matrix {
+            margin-top: 40px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+        
+        .owasp-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* ===== LEYENDA ===== */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        /* ===== MODALES ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            animation: slideDown 0.3s;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* ===== ESTILOS PARA LOS DETALLES DENTRO DEL MODAL ===== */
+        .modal .control-detail {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: none;
+            border-left: 4px solid #3498db;
+            margin: 0;
+        }
+        
+        .modal .control-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal .control-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .modal .control-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .modal .control-body {
+            margin-left: 55px;
+        }
+        
+        .modal .implementation {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        
+        .modal .implementation h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .risk-section {
+            background: #fef9e7;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .standard-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .standard-btn {
+            background: #ecf0f1;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        .standard-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-owasp { background: #e74c3c; color: white; border-color: #c0392b; }
+        .btn-iso { background: #2980b9; color: white; border-color: #1f618d; }
+        .btn-nist { background: #16a085; color: white; border-color: #1e6f5c; }
+        
+        .standard-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #7f8c8d;
+        }
+        
+        /* ===== OCULTAR DESCRIPCIONES DETALLADAS ===== */
+        .hidden-descriptions {
+            display: none;
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            .layer-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Modelo de Seguridad de la Información</h1>
+            <p class="subtitle">Aplicado en el Desarrollo de Framework para Aplicaciones Web en .NET</p>
+            <p class="subtitle">Por: Paolo Cesar Ali Sanchez</p>
+        </header>
+        
+        <!-- DIAGRAMA DE CAPAS -->
+        <div class="architecture">
+            <!-- Capa Presentación -->
+            <div class="layer presentation">
+                <div class="layer-title">
+                    <h2>Capa de Presentación (API / UI)</h2>
+                    <span>Función: Evitar ataques en el inicio de acceso</span>
+                </div>
+                <div class="controls">
+                    <div class="control" data-control="5">
+                        <div class="control-title">Control 5: Validación de entradas</div>
+                        <div class="control-desc">Sanitización y validación de todos los inputs para prevenir inyecciones</div>
+                    </div>
+                    <div class="control" data-control="3">
+                        <div class="control-title">Control 3: Gestión de sesiones y tokens</div>
+                        <div class="control-desc">Implementación segura de JWT y manejo de sesiones</div>
+                    </div>
+                    <div class="control" data-control="10">
+                        <div class="control-title">Control 10: Falsificación de Solicitud del Lado del Servidor (Prevención de SSRF)</div>
+                        <div class="control-desc">Control y validación de comunicaciones externas</div>
+                    </div>
+                    <div class="control" data-control="11">
+                        <div class="control-title">Control 11: Diseño seguro de la aplicación</div>
+                        <div class="control-desc">Control para la prevención de patrones inseguros de diseño</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Capa Core -->
+            <div class="layer core">
+                <div class="layer-title">
+                    <h2>Capa de Core (Dominio / Servicios de Negocio)</h2>
+                    <span>Función: Asegurar la lógica de negocio y protección de datos</span>
+                </div>
+                <div class="controls">
+                    <div class="control" data-control="1">
+                        <div class="control-title">Control 1: Autenticación de usuarios</div>
+                        <div class="control-desc">Mecanismos robustos de verificación de identidad</div>
+                    </div>
+                    <div class="control" data-control="2">
+                        <div class="control-title">Control 2: Autorización basada en roles</div>
+                        <div class="control-desc">Control de acceso granular según perfiles de usuario</div>
+                    </div>
+                    <div class="control" data-control="7">
+                        <div class="control-title">Control 7: Cifrado de datos sensibles</div>
+                        <div class="control-desc">Protección de información sensible con algoritmos robustos</div>
+                    </div>
+                    <div class="control" data-control="9">
+                        <div class="control-title">Control 9: Integridad de software y datos</div>
+                        <div class="control-desc">Verificación de integridad y prevención de manipulaciones</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Capa Infraestructura -->
+            <div class="layer infrastructure">
+                <div class="layer-title">
+                    <h2>Capa de Infraestructura (Persistencia y Configuración)</h2>
+                    <span>Función: Fortalecer el entorno de ejecución</span>
+                </div>
+                <div class="controls">
+                    <div class="control" data-control="6">
+                        <div class="control-title">Control 6: Seguridad en la configuración de la aplicación y servidor</div>
+                        <div class="control-desc">Hardening de servidores y configuración de aplicaciones</div>
+                    </div>
+                    <div class="control" data-control="8">
+                        <div class="control-title">Control 8: Gestión de dependencias y librerias</div>
+                        <div class="control-desc">Control y actualización de librerías de terceros</div>
+                    </div>
+                    <div class="control" data-control="4">
+                        <div class="control-title">Control 4: Manejo de logs y auditoría</div>
+                        <div class="control-desc">Registro seguro de eventos y monitorización de actividades</div>
+                    </div>
+                    <div class="control" data-control="12">
+                        <div class="control-title">Control 12: Seguridad en el ciclo de vida de desarrollo</div>
+                        <div class="control-desc">Pipelines de despliegue, gestión de secretos y seguridad de dependencias</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Capa Pruebas -->
+            <div class="layer testing">
+                <div class="layer-title">
+                    <h2>Capa de Pruebas y Validación</h2>
+                    <span>Función: Garantizar la efectividad de los controles</span>
+                </div>
+                <div class="controls">
+                    <div class="control" data-control="test-unit">
+                        <div class="control-title">Pruebas unitarias y de integración</div>
+                        <div class="control-desc">Verificación de cada control de seguridad de forma aislada y combinada</div>
+                    </div>
+                    <div class="control" data-control="test-matrix">
+                        <div class="control-title">Matriz de cobertura OWASP</div>
+                        <div class="control-desc">Aseguramiento de que cada riesgo tenga al menos un control aplicado</div>
+                    </div>
+                    <div class="control" data-control="test-e2e">
+                        <div class="control-title">Pruebas UI/E2E automatizadas</div>
+                        <div class="control-desc">Validación de seguridad en condiciones reales de uso</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Matriz OWASP -->
+        <!-- <div class="owasp-matrix">
+            <h3 class="owasp-title">Matriz de Trazabilidad OWASP Top 10 2021</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>OWASP Top 10 2021</th>
+                        <th>Controles Aplicados</th>
+                        <th>Capa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A01:2021 - Fallas de Control de Acceso</td><td>Control 2</td><td>Core, Presentación</td></tr>
+                    <tr><td>A02:2021 - Fallas Criptográficas</td><td>Control 7</td><td>Core</td></tr>
+                    <tr><td>A03:2021 - Inyección</td><td>Control 5</td><td>Presentación</td></tr>
+                    <tr><td>A04:2021 - Diseño Inseguro</td><td>Control 11</td><td>Presentación</td></tr>
+                    <tr><td>A05:2021 - Configuración de Seguridad Incorrecta</td><td>Control 6</td><td>Infraestructura</td></tr>
+                    <tr><td>A06:2021 - Componentes Vulnerables y Desactualizados</td><td>Control 8</td><td>Infraestructura</td></tr>
+                    <tr><td>A07:2021 - Fallas de Identificación y Autenticación</td><td>Control 1, Control 3</td><td>Core, Presentación</td></tr>
+                    <tr><td>A08:2021 - Fallas de Integridad de Software y Datos</td><td>Control 9, Control 12</td><td>Core, Presentación</td></tr>
+                    <tr><td>A09:2021 - Fallas de Registro y Monitoreo</td><td>Control 4</td><td>Infraestructura</td></tr>
+                    <tr><td>A10:2021 - Falsificación de Solicitudes del Lado del Servidor (SSRF)</td><td>Control 10</td><td>Presentación</td></tr>
+                </tbody>
+            </table>
+        </div> -->
+        
+        <!-- Leyenda -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Capa de Presentación</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Capa Core</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Capa de Infraestructura</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>Capa de Pruebas</span></div>
+        </div>
+        
+        <footer>
+            <p>Modelo de Seguridad de Información para Framework .NET - Haz clic en cualquier control para ver su detalle y estándares relacionados</p>
+        </footer>
+    </div>
+    
+    <!-- MODAL PRINCIPAL (detalle del control) -->
+    <div id="controlModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <!-- MODAL SECUNDARIO (detalle del estándar) -->
+    <div id="standardModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="document.getElementById('standardModal').style.display='none'">&times;</span>
+            <div id="standardModalBody"></div>
+        </div>
+    </div>
+    
+    <!-- DESCRIPCIONES DETALLADAS OCULTAS (con datos de la tabla) -->
+    <div class="hidden-descriptions">
+        <!-- Control 1 -->
+        <div id="detail-1" class="control-detail" 
+             data-riesgo="Inyección SQL, XSS (Cross-Site Scripting), manipulación de parámetros, corrupción de datos."
+             data-owasp="A07 – Fallos de Identificación y Autenticación"
+             data-iso="A.8.16 Validación de datos de entrada"
+             data-nist="SI-10 Validación de Entrada">
+            <div class="control-header"><div class="control-number">1</div><div class="control-title">Autenticación de usuarios</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Verificar la identidad de los usuarios que acceden al sistema.</p>
+                <p><strong>Descripción:</strong> Implementa mecanismos robustos de verificación de identidad mediante credenciales seguras, autenticación multifactor y gestión segura de contraseñas.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Uso de Identity Framework, políticas de contraseñas, integración con proveedores de identidad externos, tokens JWT con expiración y revocación.</p></div>
+            </div>
+        </div>
+        <!-- Control 2 -->
+        <div id="detail-2" class="controlf-detail"
+             data-riesgo="Acceso no autorizado, ataques de fuerza bruta, credential stuffing."
+             data-owasp="A01 – Control de Acceso Defectuoso"
+             data-iso="A.5.17 Autenticación, A.8.2 Información de identidad, A.8.3 Gestión de credenciales"
+             data-nist="IA-2 Identificación y Autenticación, IA-5 Gestión de Autenticadores">
+            <div class="control-header"><div class="control-number">2</div><div class="control-title">Autorización basada en roles</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Controlar el acceso a recursos según los privilegios del usuario.</p>
+                <p><strong>Descripción:</strong> Establece políticas de acceso granular basadas en roles y permisos, implementando el principio de mínimo privilegio.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Roles de ASP.NET, políticas personalizadas, atributos [Authorize], comprobaciones de acceso en recursos específicos.</p></div>
+            </div>
+        </div>
+        <!-- Control 3 -->
+        <div id="detail-3" class="control-detail"
+             data-riesgo="Secuestro de sesión, replay attacks, robo de tokens."
+             data-owasp="A07 - Fallos de Identificación y Autenticación"
+             data-iso="A.8.1 Control de acceso, A.8.2 Identidades"
+             data-nist="AC-7 Bloqueo de Sesión, AC-12 Terminación de Sesión">
+            <div class="control-header"><div class="control-number">3</div><div class="control-title">Gestión de sesiones y tokens</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Gestionar de forma segura las sesiones de usuario y tokens de autenticación.</p>
+                <p><strong>Descripción:</strong> Implementa mecanismos seguros para la gestión del estado de autenticación, incluyendo timeout de sesión, regeneración de identificadores y almacenamiento seguro de tokens.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>JWT con firma digital, almacenamiento seguro en cookies HttpOnly, refresh tokens, invalidación de sesiones.</p></div>
+            </div>
+        </div>
+        <!-- Control 4 -->
+        <div id="detail-4" class="control-detail"
+             data-riesgo="Escalamiento de privilegios, acceso indebido a recursos, bypass de protección."
+             data-owasp="A09 – Fallas de Registro y Monitoreo de Seguridad"
+             data-iso="A.5.18 Control de acceso, A.8.1 Responsabilidad y autorización"
+             data-nist="AC-2 Gestión de Cuentas, AC-3 Aplicación de Control de Acceso">
+            <div class="control-header"><div class="control-number">4</div><div class="control-title">Manejo de logs y auditoría</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Registrar actividades relevantes para auditoría y detección de incidentes.</p>
+                <p><strong>Descripción:</strong> Implementa un sistema de logging seguro que registre eventos significativos sin exponer información sensible, permitiendo la trazabilidad de acciones.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Serilog o NLog con enriquecimiento contextual, almacenamiento seguro de logs, sanitización de datos sensibles en logs.</p></div>
+            </div>
+        </div>
+        <!-- Control 5 -->
+        <div id="detail-5" class="control-detail"
+             data-riesgo="Interceptación (MITM), robo de credenciales, sniffing."
+             data-owasp="A03 – Inyección"
+             data-iso="A.8.24 Criptografía para protección, A.8.25 Claves criptográficas"
+             data-nist="SC-12 Protección Criptográfica, SC-13 Uso de Criptografía">
+            <div class="control-header"><div class="control-number">5</div><div class="control-title">Validación de entradas</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Prevenir ataques de inyección y manipulación de datos mediante entradas maliciosas.</p>
+                <p><strong>Descripción:</strong> Valida y sanitiza todas las entradas del usuario, aplicando listas blancas y escapado adecuado según el contexto de uso.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>DataAnnotations, FluentValidation, sanitización de HTML con HtmlSanitizer, parametrización de queries SQL.</p></div>
+            </div>
+        </div>
+        <!-- Control 6 -->
+        <div id="detail-6" class="control-detail"
+             data-riesgo="Robo de bases de datos, exposición de información sensible."
+             data-owasp="A05 – Configuración Incorrecta de Seguridad"
+             data-iso="A.8.24 Criptografía, A.8.25 Gestión de claves"
+             data-nist="SC-28 Protección de la Información en Reposo">
+            <div class="control-header"><div class="control-number">6</div><div class="control-title">Seguridad en la configuración de la aplicación y servidor</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Asegurar la configuración de la aplicación y su entorno de ejecución.</p>
+                <p><strong>Descripción:</strong> Garantiza que la configuración de la aplicación, servidores y servicios relacionados sigue prácticas seguras y no expone información sensible.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Azure Key Vault o AWS Secrets Manager, configuración por entorno, eliminación de información sensible de configuraciones.</p></div>
+            </div>
+        </div>
+        <!-- Control 7 -->
+        <div id="detail-7" class="control-detail"
+             data-riesgo="Componentes obsoletos, librerías comprometidas, vulnerabilidades en frameworks."
+             data-owasp="A02 – Fallas Criptográficas"
+             data-iso="A.5.19 Relaciones con proveedores, A.5.20 Seguridad en servicios TI externos"
+             data-nist="SI-7 Integridad de Software, Firmware e Información">
+            <div class="control-header"><div class="control-number">7</div><div class="control-title">Cifrado de datos sensibles</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Proteger la confidencialidad e integridad de datos sensibles.</p>
+                <p><strong>Descripción:</strong> Aplica algoritmos criptográficos robustos para proteger datos en reposo y en tránsito, con una gestión adecuada de claves.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>ASP.NET Data Protection API, encriptación AES para datos en reposo, TLS 1.2+ para datos en tránsito.</p></div>
+            </div>
+        </div>
+        <!-- Control 8 -->
+        <div id="detail-8" class="control-detail"
+             data-riesgo="Configuraciones erróneas, exposición involuntaria, fuga de información."
+             data-owasp="A06 –Componentes Vulnerables y Obsoletos"
+             data-iso="A.8.9 Configuración de seguridad, A.8.20 Seguridad de servicios"
+             data-nist="CM-2 Configuración Base, CM-6 Ajustes de Configuración">
+            <div class="control-header"><div class="control-number">8</div><div class="control-title">Gestión de dependencias y librerias</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Prevenir vulnerabilidades por componentes de terceros.</p>
+                <p><strong>Descripción:</strong> Gestiona de forma proactiva las dependencias externas, manteniéndolas actualizadas y monitorizando vulnerabilidades conocidas.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>NuGet audit, OWASP Dependency Check, actualizaciones automáticas con Dependabot, verificación de checksums.</p></div>
+            </div>
+        </div>
+        <!-- Control 9 -->
+        <div id="detail-9" class="control-detail"
+             data-riesgo="Incidentes no detectados, intrusiones sin rastro, falta de evidencia forense."
+             data-owasp="A08 – Fallas de Integridad de Software y Datos"
+             data-iso="A.8.15 Logs de actividad, A.5.30 Monitoreo"
+             data-nist="AU-2 Registro (Logging), AU-6 Revisión de Auditoría, IR-4 Manejo de Incidentes">
+            <div class="control-header"><div class="control-number">9</div><div class="control-title">Integridad de software y datos</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Garantizar que el software y los datos no han sido alterados indebidamente.</p>
+                <p><strong>Descripción:</strong> Implementa mecanismos para verificar la integridad del código, configuraciones y datos, detectando cambios no autorizados.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Firmas digitales de assemblies, checksums de datos, hashing de configuraciones, WCF para integridad de mensajes.</p></div>
+            </div>
+        </div>
+        <!-- Control 10 -->
+        <div id="detail-10" class="control-detail"
+             data-riesgo="Filtración de información del servidor, rutas internas, detalles sensibles."
+             data-owasp="A10 – Falsificación de Solicitud del Lado del Servidor"
+             data-iso="A.8.33 Gestión de vulnerabilidades técnicas"
+             data-nist="SI-11 Manejo de Errores">
+            <div class="control-header"><div class="control-number">10</div><div class="control-title">Prevención de SSRF</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Prevenir ataques de Server-Side Request Forgery.</p>
+                <p><strong>Descripción:</strong> Controla y restringe las solicitudes salientes para prevenir el acceso no autorizado a recursos internos o externos.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Listas blancas de dominios permitidos, validación de URLs, evitar el uso de datos de usuario en solicitudes, network segmentation.</p></div>
+            </div>
+        </div>
+        <!-- Control 11 -->
+        <div id="detail-11" class="control-detail"
+             data-riesgo="Alteración no autorizada de información, pérdida de integridad, cambios no rastreados."
+             data-owasp="A04 – Diseño Inseguro"
+             data-iso="A.8.31 Gestión de cambios"
+             data-nist="AU-12 Generación de Auditoría, CM-3 Control de Cambios de Configuración">
+            <div class="control-header"><div class="control-number">11</div><div class="control-title">Diseño seguro de la aplicación</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Prevenir patrones de diseño inseguros que puedan introducir vulnerabilidades.</p>
+                <p><strong>Descripción:</strong> Asegura que la aplicación se diseñe siguiendo principios de seguridad desde el inicio, incluyendo modelado de amenazas y revisiones de arquitectura.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Análisis de arquitectura, uso de patrones seguros, revisión de diseño con herramientas como Threat Modeling Tool.</p></div>
+            </div>
+        </div>
+        <!-- Control 12 -->
+        <div id="detail-12" class="control-detail"
+             data-riesgo="Identificación temprana de vulnerabilidades, errores lógicos, fallas de diseño."
+             data-owasp="A08 – Fallas de Integridad de Software y Datos"
+             data-iso="A.5.36 Seguridad en el desarrollo, A.8.28 Pruebas de seguridad"
+             data-nist="RA-5 Escaneo de Vulnerabilidades">
+            <div class="control-header"><div class="control-number">12</div><div class="control-title">Seguridad en el ciclo de vida de desarrollo</div></div>
+            <div class="control-body">
+                <p><strong>Objetivo:</strong> Integrar la seguridad en todas las fases del ciclo de vida del desarrollo.</p>
+                <p><strong>Descripción:</strong> Implementa prácticas de DevSecOps, incluyendo análisis de seguridad en CI/CD, gestión segura de secretos, y escaneo de dependencias.</p>
+                <div class="implementation"><h4>Implementación en .NET:</h4><p>Pipelines de Azure DevOps con tareas de seguridad, GitHub Actions con secretos, escaneo de código con SonarQube.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Obtener elementos de los modales
+        const controlModal = document.getElementById('controlModal');
+        const standardModal = document.getElementById('standardModal');
+        const modalBody = document.getElementById('modal-body');
+        const standardModalBody = document.getElementById('standardModalBody');
+        const closeButtons = document.querySelectorAll('.close');
+
+        // Cerrar modales al hacer clic en X
+        closeButtons.forEach(btn => {
+            btn.onclick = function() {
+                controlModal.style.display = 'none';
+                standardModal.style.display = 'none';
+            }
+        });
+
+        // Cerrar modales al hacer clic fuera del contenido
+        window.onclick = function(event) {
+            if (event.target == controlModal) controlModal.style.display = 'none';
+            if (event.target == standardModal) standardModal.style.display = 'none';
+        }
+
+        // Función para mostrar el modal de estándar con información
+        function showStandard(standardType, controlData) {
+            let title = '', content = '';
+            const riesgo = controlData.dataset.riesgo || 'Información no disponible';
+            
+            switch(standardType) {
+                case 'owasp':
+                    title = '🔒 OWASP Top 10:2021';
+                    content = controlData.dataset.owasp || 'No especificado';
+                    break;
+                case 'iso':
+                    title = '📜 ISO/IEC 27001:2022 (Anexo A)';
+                    content = controlData.dataset.iso || 'No especificado';
+                    break;
+                case 'nist':
+                    title = '🛡️ NIST SP 800-53 Rev.5';
+                    content = controlData.dataset.nist || 'No especificado';
+                    break;
+            }
+            
+            // Construir HTML del modal secundario
+            standardModalBody.innerHTML = `
+                <h3 style="margin-bottom:15px; color:#2c3e50;">${title}</h3>
+                <div style="background:#f0f7ff; padding:15px; border-radius:8px;">
+                    <p><strong>Código / Descripción:</strong></p>
+                    <p style="font-size:1.1em;">${content}</p>
+                </div>
+                <p style="margin-top:20px; font-style:italic; color:#555;">Este estándar está asociado al control seleccionado y contribuye a mitigar el riesgo: <strong>${riesgo}</strong></p>
+            `;
+            standardModal.style.display = 'block';
+        }
+
+        // Agregar evento click a todos los controles
+        const controls = document.querySelectorAll('.control[data-control]');
+        controls.forEach(control => {
+            control.addEventListener('click', function(e) {
+                const controlId = this.getAttribute('data-control'); // "1", "2", ...
+                if (controlId.startsWith('test')) return; // No hacer nada para pruebas
+                
+                const detailElement = document.getElementById('detail-' + controlId);
+                if (detailElement) {
+                    // Clonar el contenido del detalle
+                    const content = detailElement.cloneNode(true);
+                    
+                    // Extraer los datos de estándares del elemento original
+                    const riesgo = detailElement.dataset.riesgo || '';
+                    const owasp = detailElement.dataset.owasp || '';
+                    const iso = detailElement.dataset.iso || '';
+                    const nist = detailElement.dataset.nist || '';
+                    
+                    // Agregar sección de riesgo y botones al clon
+                    const riskSection = document.createElement('div');
+                    riskSection.className = 'risk-section';
+                    riskSection.innerHTML = `<strong>Riesgo Mitigado:</strong> ${riesgo}`;
+                    
+                    const standardButtons = document.createElement('div');
+                    standardButtons.className = 'standard-buttons';
+                    standardButtons.innerHTML = `
+                        <button class="standard-btn btn-owasp" data-standard="owasp"><span>🔒</span> OWASP</button>
+                        <button class="standard-btn btn-iso" data-standard="iso"><span>📜</span> ISO</button>
+                        <button class="standard-btn btn-nist" data-standard="nist"><span>🛡️</span> NIST</button>
+                    `;
+                    
+                    // Insertar en el contenido clonado
+                    const controlBody = content.querySelector('.control-body');
+                    controlBody.appendChild(riskSection);
+                    controlBody.appendChild(standardButtons);
+                    
+                    // Asignar eventos a los botones (usando los datos del detailElement original)
+                    standardButtons.querySelectorAll('.standard-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation(); // Evitar que se cierre el modal principal
+                            const std = this.dataset.standard;
+                            showStandard(std, detailElement);
+                        });
+                    });
+                    
+                    // Limpiar modal y mostrar
+                    modalBody.innerHTML = '';
+                    modalBody.appendChild(content);
+                    controlModal.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
